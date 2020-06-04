@@ -63,7 +63,10 @@ attrition %>%
   ggtitle("Department with Largest Attrition Number") +
   xlab("Department")
 
-
+attrition %>% 
+  count(status, dept) %>% 
+  filter(status == "left") %>% 
+  select(n)
 
 
 #Examine the average working hrs of each dept
@@ -74,19 +77,32 @@ attrition %>%
   geom_bar(stat = "identity") +
   coord_flip()
 
+#relationship between department size and the churn size
+cbind.data.frame(size = attrition %>% 
+                   count(dept) %>% 
+                   select(n),
+                 churn = attrition %>% 
+                   count(status, dept) %>% 
+                   filter(status == "left") %>% 
+                   select(n)) %>% 
+  cor()
+
 
 #Working hrs appear to be almost the same across all dept
 #Dept with the lowest salary range
 attrition %>% 
   group_by(dept) %>% 
   count(salary, sort = T) %>% 
-  ggplot(., aes(reorder(dept, n), n, fill = salary)) +
+  ggplot(., aes(reorder(dept, n), n, fill = factor(salary, levels = c("high", "medium", "low")))) +
   geom_bar(stat = "identity") +
-  coord_flip()
+  coord_flip() +
+  ggtitle("Salary Range by Department") + 
+  scale_fill_discrete(name = "Salary", labels = c("High", "Medium", "Low")) +
+  labs(x = "Departments")
 
 
 
-#ration of people in a dept versus those who left
+#ratio of people in a dept versus those who left
 attrition %>% 
   group_by(dept) %>% 
   count(status) %>% 
@@ -122,16 +138,18 @@ attrition %>%
   scale_fill_manual(values=c("#999999", "#E69F00", ))
 
   
-#https://www.kaggle.com/ragulram/hr-analytics-exploration-and-modelling-with-r
+
 #Ratio of people who left and are remaining by the number of projects they conducted
 attrition %>% 
   group_by(number_project) %>% 
   count(status) %>% 
   ggplot(., aes(factor(number_project), n, fill = status)) +
-  geom_bar(stat = "identity")
+  geom_bar(stat = "identity") +
+  labs(title = "Number of Projects by Employment Status",
+       x = "Number of Projects", y = "Counts")
 
 
-#It would make more send to do it interms of ratio
+#It would make more send to do it in terms of ratio
 attrition %>% 
   group_by(number_project) %>% 
   count(status) %>% 
@@ -170,7 +188,8 @@ attrition %>%
 
 #People who left ap
 ggplot(attrition, aes(average_montly_hours, fill = status)) +
-  geom_density(alpha = 0.1)
+  geom_density(alpha = 0.1) +
+  ggtitle("Average Working hours")
 
 
 #People who left appear to have a bimodal distribution of working hrs and evaluation
@@ -180,7 +199,7 @@ ggplot(attrition, aes(average_montly_hours, fill = status)) +
 #Lets examine the time spent in the company
 attrition %>% 
   group_by(time_spend_company) %>% 
-  count(status) #%>% 
+  count(status) %>% 
   mutate(n2 = sum(n)) %>% 
   ungroup() %>% 
   mutate(n3 = n/n2) %>% 
@@ -188,7 +207,8 @@ attrition %>%
   geom_bar(stat = "identity", width = 2) +
   coord_polar(theta = "y") +
   facet_wrap(~time_spend_company) +
-  scale_fill_manual(values=c("#999999", "#E69F00"))
+  scale_fill_manual(values=c("#999999", "#E69F00")) +
+  ggtitle("Time Spent in Company")
 
   
 attrition %>% 
